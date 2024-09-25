@@ -17,11 +17,52 @@
             text-align: center;
             color: #333;
         }
+        .container {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 10px;
+        }
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .sidebar label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .sidebar select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+        }
+        .button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #c0392b;
+        }
         .lesson-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             padding: 20px;
+            flex-grow: 1;
         }
         .lesson {
             background-color: #fff;
@@ -49,32 +90,120 @@
 <body>
     <div id="app">
         <h1>Lessons List</h1>
-        <div class="lesson-container" v-if="lessons.length">
-            <div v-for="lesson in lessons" :key="lesson._id" class="lesson">
-                <h1>{{ lesson.subject_name }}</h1>
-                <p>Location: {{ lesson.location }}</p>
-                <p>Price: ${{ lesson.price }}</p>
-                <p>Seats available: {{ lesson.seats_available }}</p>
+        <div class="container">
+            <!-- Sidebar for sorting -->
+            <div class="sidebar">
+                <h2>Sort Lessons</h2>
+                <label for="sortLocation">Location:</label>
+                <select v-model="sortCriteria.location" @change="sortLessons">
+                    <option value="">All</option>
+                    <option v-for="loc in uniqueLocations" :value="loc">{{ loc }}</option>
+                </select>
+
+                <label for="sortAvailability">Availability:</label>
+                <select v-model="sortCriteria.availability" @change="sortLessons">
+                    <option value="">All</option>
+                    <option value="available">Available</option>
+                    <option value="full">Full</option>
+                </select>
+
+                <label for="sortPrice">Price:</label>
+                <select v-model="sortCriteria.price" @change="sortLessons">
+                    <option value="asc">Low to High</option>
+                    <option value="desc">High to Low</option>
+                </select>
+
+                <label for="sortSubject">Subject:</label>
+                <select v-model="sortCriteria.subject" @change="sortLessons">
+                    <option value="">All</option>
+                    <option v-for="sub in uniqueSubjects" :value="sub">{{ sub }}</option>
+                </select>
+
+                <button class="button" @click="resetFilters">Reset Filters</button>
+            </div>
+
+            <!-- Lessons grid -->
+            <div class="lesson-container">
+                <div v-for="lesson in sortedLessons" :key="lesson._id" class="lesson">
+                    <h1>{{ lesson.lesson_title}}</h1>
+                    <p>Location: {{ lesson.location }}</p>
+                    <p>Price: ${{ lesson.price }}</p>
+                    <p>Seats available: {{ lesson.seats_available }}</p>
+                    <button class="button" @click="">Add To Cart</button>
+                </div>
             </div>
         </div>
-        <p v-else>No lessons available.</p>
     </div>
 
     <script>
-        let  app = new Vue({ 
-            el: '#app', 
-            data: { lessons: []
-            }, 
+        let app = new Vue({
+            el: '#app',
+            data: {
+                lessons: [],
+                sortCriteria: {
+                    location: '',
+                    availability: '',
+                    price: 'asc',
+                    subject: ''
+                }
+            },
+            computed: {
+                sortedLessons() {
+                    let filtered = this.lessons;
+
+                    // Filter by location
+                    if (this.sortCriteria.location) {
+                        filtered = filtered.filter(lesson => lesson.location === this.sortCriteria.location);
+                    }
+
+                    // Filter by availability
+                    if (this.sortCriteria.availability === 'available') {
+                        filtered = filtered.filter(lesson => lesson.seats_available > 0);
+                    } else if (this.sortCriteria.availability === 'full') {
+                        filtered = filtered.filter(lesson => lesson.seats_available === 0);
+                    }
+
+                    // Filter by subject
+                    if (this.sortCriteria.subject) {
+                        filtered = filtered.filter(lesson => lesson.subject_name === this.sortCriteria.subject);
+                    }
+
+                    // Sort by price
+                    if (this.sortCriteria.price === 'asc') {
+                        filtered.sort((a, b) => a.price - b.price);
+                    } else if (this.sortCriteria.price === 'desc') {
+                        filtered.sort((a, b) => b.price - a.price);
+                    }
+
+                    return filtered;
+                },
+                uniqueLocations() {
+                    const locations = this.lessons.map(lesson => lesson.location);
+                    return [...new Set(locations)];
+                },
+                uniqueSubjects() {
+                    const subjects = this.lessons.map(lesson => lesson.subject_name);
+                    return [...new Set(subjects)];
+                }
+            },
             methods: {
                 async fetchLessons() {
                     try {
                         const response = await fetch('http://localhost:3000/api/lessons');
                         const data = await response.json();
-                        console.log('data', data);
                         this.lessons = data; // Set the lessons data
                     } catch (error) {
                         console.error('Error fetching lessons:', error);
                     }
+                },
+                resetFilters() {
+                    // Reset the sortCriteria to its initial state
+                    this.sortCriteria = {
+                        location: '',
+                        availability: '',
+                        price: 'asc',
+                        subject: ''
+                    };
                 }
             },
             mounted() {
