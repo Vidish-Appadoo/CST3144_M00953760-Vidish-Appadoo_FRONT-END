@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+    <title>Document</title>
+
+    <style scoped>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .lesson-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .lesson {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .lesson:hover {
+            transform: translateY(-5px);
+        }
+        .lesson h1 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .lesson p {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="app">
+        <h1>Lessons List</h1>
+        <div class="lesson-container" v-if="lessons.length">
+            <div v-for="lesson in lessons" :key="lesson._id" class="lesson">
+                <h1>{{ lesson.subject_name }}</h1>
+                <p>Location: {{ lesson.location }}</p>
+                <p>Price: ${{ lesson.price }}</p>
+                <p>Seats available: {{ lesson.seats_available }}</p>
+            </div>
+        </div>
+        <p v-else>No lessons available.</p>
+    </div>
+
+    <script>
+        let  app = new Vue({ 
+            el: '#app', 
+            data: { lessons: []
+            }, 
+            methods: {
+                async fetchLessons() {
+                    try {
+                        const response = await fetch('http://localhost:3000/api/lessons');
+                        const data = await response.json();
+                        console.log('data', data);
+                        this.lessons = data; // Set the lessons data
+                    } catch (error) {
+                        console.error('Error fetching lessons:', error);
+                    }
+                }
+            },
+            mounted() {
+                this.fetchLessons(); // Call the method when the component is mounted
+            }
+        });
+    </script>
+</body>
+</html>
