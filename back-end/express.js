@@ -27,11 +27,13 @@ async function connectToMongo() {
   }
 }
 
-  // API route to get lessons data
-app.get('/api/lessons', async (req, res) => {
+  // API route to get lessons data and send it to front-end
+app.get('/lessons', async (req, res) => {
   try {
     const lessons = await lessonsCollection.find({}).toArray();
+    console.log("Getting lessons data");
     res.json(lessons); // Send lessons data as JSON
+    console.log("Sending lessons data to front-end");
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch lessons data' });
   }
