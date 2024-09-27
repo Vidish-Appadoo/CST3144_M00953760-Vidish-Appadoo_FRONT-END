@@ -32,13 +32,12 @@
             margin-bottom: 20px;
         }
         .sidebar label {
-            display: block;
-            margin-bottom: 10px;
             font-weight: bold;
         }
         .sidebar select {
             width: 100%;
             padding: 10px;
+            margin-top: 20px;
             margin-bottom: 20px;
             border-radius: 5px;
             border: none;
@@ -92,38 +91,30 @@
         <h1>Lessons List</h1>
         <div class="container">
             <!-- Sidebar for sorting -->
-            <!-- SORTING WRONG SHOULD BE : SORT BY EITHER SUBJECT, LOC... THEN ASC OR DESC -->
-            <!-- REDO SORTING -->
             <div class="sidebar">
-                <h2>Sort Lessons</h2>
-                 <!-- Select dropdowns for filtering lessons by various criteria -->
-                <label for="sortLocation">Location:</label>
-                <select v-model="sortCriteria.location" @change="sortLessons">
-                    <option value="">All</option>
-                    <option v-for="loc in uniqueLocations" :value="loc">{{ loc }}</option>
-                </select>
+                <h2>Sort by:</h2>
+                <div>
+                    <input type="radio" v-model="sortCriteria.field" value="subject_name">
+                    <label for="sort">Subject</label> <br>
 
-                <label for="sortAvailability">Availability:</label>
-                <select v-model="sortCriteria.availability" @change="sortLessons">
-                    <option value="">All</option>
-                    <option value="available">Available</option>
-                    <option value="full">Full</option>
-                </select>
+                    <input type="radio" v-model="sortCriteria.field" value="location">
+                    <label for="sort">Location</label> <br>
 
-                <label for="sortPrice">Price:</label>
-                <select v-model="sortCriteria.price" @change="sortLessons">
-                    <option value="asc">Low to High</option>
-                    <option value="desc">High to Low</option>
-                </select>
+                    <input type="radio" v-model="sortCriteria.field" value="price">
+                    <label for="sort">Price</label> <br>
 
-                <label for="sortSubject">Subject:</label>
-                <select v-model="sortCriteria.subject" @change="sortLessons">
-                    <option value="">All</option>
-                    <option v-for="sub in uniqueSubjects" :value="sub">{{ sub }}</option>
+                    <input type="radio" v-model="sortCriteria.field" value="seats_available">
+                    <label for="sort">Seats Available</label> <br>
+                </div>
+
+                <select v-model="sortCriteria.order" @change="sortLessons">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
                 </select>
 
                 <button class="button" @click="resetFilters">Reset Filters</button>
                 <button class="button" @click="">Shopping Cart</button>
+                
             </div>
 
             <!-- Lessons grid -->
@@ -146,58 +137,37 @@
                 lessons: [], // Array to hold lesson data
                 // Object to store sorting and filtering criteria
                 sortCriteria: {
-                    location: '',
-                    availability: '',
-                    price: 'asc',
-                    subject: ''
+                    field: '', // Field to sort by (e.g., subject, location, etc.)
+                    order: 'asc' // Order to sort by (ascending or descending)
                 }
             },
             computed: {
+                // Computed property to return sorted lessons
                 sortedLessons() {
-                    let filtered = this.lessons;
+                    let sorted = this.lessons.slice(); // Create a copy of the lessons array to not alter original array lessons
 
-                    // Filter by location
-                    if (this.sortCriteria.location) {
-                        // Keep only lessons that match the selected location
-                        filtered = filtered.filter(lesson => lesson.location === this.sortCriteria.location);
+                    if (this.sortCriteria.field) {
+                        sorted.sort((a, b) => { //compares two elements in the array at a time
+
+                            //get field which will be used for the sorting
+                            let fieldA = a[this.sortCriteria.field];
+                            let fieldB = b[this.sortCriteria.field];
+
+                            // Compare field values for ascending or descending order
+                            // value returned will tell function sort how to order the array
+                            if (this.sortCriteria.order === 'asc') {
+                                if (fieldA > fieldB) return 1; //A should be after B
+                                if (fieldA < fieldB) return -1; // A should be before B
+                                return 0; // they are equal therefore no need to swap
+                            } else {
+                                if (fieldA < fieldB) return 1;
+                                if (fieldA > fieldB) return -1;
+                                return 0;
+                            }
+                        });
                     }
-
-                    // Filter by availability
-                    if (this.sortCriteria.availability === 'available') {
-                        // Keep only lessons with available seats
-                        filtered = filtered.filter(lesson => lesson.seats_available > 0);
-                    } else if (this.sortCriteria.availability === 'full') {
-                        // Keep only lessons with no available seats
-                        filtered = filtered.filter(lesson => lesson.seats_available === 0);
-                    }
-
-                    // Filter by subject
-                    if (this.sortCriteria.subject) {
-                        // Keep only lessons that match the selected subject
-                        filtered = filtered.filter(lesson => lesson.subject_name === this.sortCriteria.subject);
-                    }
-
-                    // Sort by price (ascending or decending)
-                    if (this.sortCriteria.price === 'asc') {
-                        filtered.sort((a, b) => a.price - b.price);
-                    } else if (this.sortCriteria.price === 'desc') {
-                        filtered.sort((a, b) => b.price - a.price);
-                    }
-
-                    return filtered;
-                },
-                uniqueLocations() {
-                    // Extract locations from lessons
-                    const locations = this.lessons.map(lesson => lesson.location);
-                    // Return unique locations
-                    return [...new Set(locations)];
-                },
-                uniqueSubjects() {
-                    //  Extract subjects from lessons
-                    const subjects = this.lessons.map(lesson => lesson.subject_name);
-                    // Return unique subjects
-                    return [...new Set(subjects)];
-                }
+                    return sorted;
+                }       
             },
             methods: {
                 // Get lessons from back-end
@@ -213,10 +183,8 @@
                 resetFilters() {
                     // Reset the sortCriteria to its initial state
                     this.sortCriteria = {
-                        location: '',
-                        availability: '',
-                        price: 'asc',
-                        subject: ''
+                        field: '', 
+                        order: 'asc'
                     };
                 }
             },
