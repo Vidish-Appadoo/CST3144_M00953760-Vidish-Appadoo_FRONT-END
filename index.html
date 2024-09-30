@@ -18,7 +18,7 @@
             text-align: center;
             color: #333;
         }
-        .container {
+        .lessons-grid-container{
             display: flex;
         }
         .sidebar {
@@ -53,6 +53,7 @@
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.3s ease;
+            margin-left: 10px;
         }
         .button:hover {
             background-color: #c0392b;
@@ -89,55 +90,74 @@
             color: #7f8c8d;
             margin: 5px 0;
         }
+
     </style>
 
 </head>
 <body>
     <div id="app">
-        <h1>Lessons List</h1>
-        <div class="container">
-            <!-- Sidebar for sorting -->
-            <div class="sidebar">
-                <h2>Sort by:</h2>
-                 <!-- Field selection for sorting -->
-                <div>
-                    <input type="radio" v-model="sortCriteria.field" value="subject_name">
-                    <label for="sort">Subject</label> <br>
+        <div v-if="!showCart" class="lesson-list">
+            <h1>Lessons List</h1>
+            <div class="lessons-grid-container">
+                <!-- Sidebar for sorting -->
+                <div class="sidebar">
+                    <h2>Sort by:</h2>
+                    <!-- Field selection for sorting -->
+                    <div>
+                        <input type="radio" v-model="sortCriteria.field" value="subject_name">
+                        <label for="sort">Subject</label> <br>
 
-                    <input type="radio" v-model="sortCriteria.field" value="location">
-                    <label for="sort">Location</label> <br>
+                        <input type="radio" v-model="sortCriteria.field" value="location">
+                        <label for="sort">Location</label> <br>
 
-                    <input type="radio" v-model="sortCriteria.field" value="price">
-                    <label for="sort">Price</label> <br>
+                        <input type="radio" v-model="sortCriteria.field" value="price">
+                        <label for="sort">Price</label> <br>
 
-                    <input type="radio" v-model="sortCriteria.field" value="seats_available">
-                    <label for="sort">Seats Available</label> <br>
+                        <input type="radio" v-model="sortCriteria.field" value="seats_available">
+                        <label for="sort">Seats Available</label> <br>
+                    </div>
+                    <!-- Order selection for sorting (asc/desc)-->
+                    <select v-model="sortCriteria.order" >
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+
+                    <button class="button" @click="resetFilters">Reset Filters</button>
+
+                    <!-- Disable button if no nothing in cart -->
+                    <button v-if="cart.length > 0" class="button" @click="switchToCart"><i class="fas fa-shopping-cart"></i> [{{cart.length}}]</button>
+                    <button v-else class="button" disabled><i class="fas fa-shopping-cart"></i></button>
+                    
                 </div>
-                <!-- Order selection for sorting (asc/desc)-->
-                <select v-model="sortCriteria.order" >
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                </select>
 
-                <button class="button" @click="resetFilters">Reset Filters</button>
-                <button v-if="cart.length > 0" class="button" @click="">Shopping Cart</button>
-                <button v-else class="button" disabled @click="">Shopping Cart</button>
-                
-            </div>
-
-            <!-- Lessons grid -->
-            <div class="lesson-container">
-                <div v-for="lesson in sortedLessons" class="lesson">
-                    <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
-                    <p>Location: {{ lesson.location }}</p>
-                    <p>Price: ${{ lesson.price }}</p>
-                    <p>Seats available: {{ lesson.seats_available }}</p>
-                     <!-- Disable button if no seats available -->
-                    <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
-                    <button v-else disabled class="button">Add To Cart</button>
+                <!-- Lessons grid -->
+                <div class="lesson-container">
+                    <div v-for="lesson in sortedLessons" class="lesson">
+                        <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
+                        <p>Location: {{ lesson.location }}</p>
+                        <p>Price: ${{ lesson.price }}</p>
+                        <p>Seats available: {{ lesson.seats_available }}</p>
+                        <!-- Disable button if no seats available -->
+                        <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
+                        <button v-else disabled class="button">Add To Cart</button>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div v-else class="cart-container">
+            <h1>Cart</h1>
+            <button v-if="cart.length > 0" class="button" @click="switchToCart" style="padding-left: 10px; padding-right: 10px;"><i class="fas fa-times"></i></button>
+            <div v-for="lesson in cart" class="lesson">
+                <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
+                <p>Location: {{ lesson.location }}</p>
+                <p>Price: ${{ lesson.price }}</p>
+                <p>Seats available: {{ lesson.seats_available }}</p>
+                
+                <button class="button" @click="">Remove from Cart</button>
+            </div>
+        </div>
+        
     </div>
 
     <script>
@@ -151,6 +171,7 @@
                     order: 'asc' // Order to sort by (ascending or descending)
                 },
                 cart: [],
+                showCart: false
             },
             computed: {
                 // Computed property to return sorted lessons dynamically
@@ -201,10 +222,18 @@
                 },
                 // Add lesson to cart
                 addToCart(lesson) {
-                    this.cart.push(lesson); // Add lesson to cart if not already present
-                    console.log('Lesson added to cart:', lesson);
+                    const clonedLesson = JSON.parse(JSON.stringify(lesson)); // Create a plain copy of the lesson object with only object attributes
+                    this.cart.push(clonedLesson);
+                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
                     lesson.seats_available--
                 },
+                switchToCart(){
+                    if (this.showCart) {
+                        this.showCart = false
+                    }else{
+                        this.showCart = true
+                    }
+                }
             },
             mounted() {
                 this.fetchLessons(); // Call the method when the component is mounted
