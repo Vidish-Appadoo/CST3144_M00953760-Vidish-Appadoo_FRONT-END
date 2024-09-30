@@ -27,7 +27,7 @@ async function connectToMongo() {
   }
 }
 
-  // API route to get lessons data and send it to front-end
+// API route to get lessons data and send it to front-end
 app.get('/lessons', async (req, res) => {
   try {
     const lessons = await lessonsCollection.find({}).toArray();
