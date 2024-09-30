@@ -18,7 +18,7 @@
             text-align: center;
             color: #333;
         }
-        .lessons-grid-container{
+        .lessons-grid-container, .cart-container{
             display: flex;
         }
         .sidebar {
@@ -90,13 +90,30 @@
             color: #7f8c8d;
             margin: 5px 0;
         }
+        input[type="text"] {
+            width: 90%; 
+            padding: 10px; 
+            margin-top: 10px; 
+            margin-bottom: 20px;
+            border-radius: 5px; 
+            border: none; 
+            outline: none; 
+            background-color: #ffffff; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+            font-size: 1rem; 
+        }
+
+        input[type="text"]:focus {
+            border: 2px solid #e74c3c; /* Border color on focus */
+            box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); /* Shadow on focus */
+        }
 
     </style>
 
 </head>
 <body>
     <div id="app">
-        <div v-if="!showCart" class="lesson-list">
+        <div v-if="showLessons" class="lesson-list">
             <h1>Lessons List</h1>
             <div class="lessons-grid-container">
                 <!-- Sidebar for sorting -->
@@ -145,19 +162,31 @@
             </div>
         </div>
 
-        <div v-else class="cart-container">
-            <h1>Cart</h1>
-            <button v-if="cart.length > 0" class="button" @click="switchToCart" style="padding-left: 10px; padding-right: 10px;"><i class="fas fa-times"></i></button>
-            <div v-for="lesson in cart" class="lesson">
-                <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
-                <p>Location: {{ lesson.location }}</p>
-                <p>Price: ${{ lesson.price }}</p>
-                <p>Seats available: {{ lesson.seats_available }}</p>
-                
-                <button class="button" @click="">Remove from Cart</button>
+        <div v-if="showCart">
+            <h1>Lessons Added to Cart</h1>
+            <div class="cart-container">
+                <div class="sidebar">
+                    <h2>Checkout</h2>
+                    <div>
+                        <input type="text" v-model="customerName" placeholder="Name" />
+                        <input type="text" v-model="customerPhone" placeholder="Phone Number" />
+                    </div>
+                    <button class="button" @click="switchToLessons">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="button" @click="">Checkout</button>
+                </div>
+                <div class="lesson-container"> <!-- Added a container for the lessons -->
+                    <div v-for="lesson in cart" class="lesson">
+                        <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
+                        <p>Location: {{ lesson.location }}</p>
+                        <p>Price: ${{ lesson.price }}</p>
+                        <p>Seats available: {{ lesson.seats_available }}</p>
+                        <button class="button" @click="">Remove from Cart</button>
+                    </div>
+                </div>
             </div>
         </div>
-        
     </div>
 
     <script>
@@ -171,7 +200,10 @@
                     order: 'asc' // Order to sort by (ascending or descending)
                 },
                 cart: [],
-                showCart: false
+                showCart: false,
+                showLessons : true,
+                customerName: '', 
+                customerPhone: '' 
             },
             computed: {
                 // Computed property to return sorted lessons dynamically
@@ -228,11 +260,12 @@
                     lesson.seats_available--
                 },
                 switchToCart(){
-                    if (this.showCart) {
-                        this.showCart = false
-                    }else{
-                        this.showCart = true
-                    }
+                    this.showCart = true
+                    this.showLessons = false
+                },
+                switchToLessons(){
+                    this.showCart = false
+                    this.showLessons = true
                 }
             },
             mounted() {
