@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <title>Document</title>
+    <title>After School Lessons</title>
     <style scoped>
         body {
             font-family: Arial, sans-serif;
@@ -170,10 +170,12 @@
                         <input type="text" v-model="customerName" placeholder="Name" />
                         <input type="text" v-model="customerPhone" placeholder="Phone Number" />
                     </div>
+                    <p>{{errorMessage}}</p>
                     <button class="button" @click="switchToLessons">
                         <i class="fas fa-times"></i>
                     </button>
-                    <button class="button" @click="">Checkout</button>
+                    <button v-if="enableCheckout" class="button" @click="">Checkout</button>
+                    <button v-else disabled class="button" @click="">Checkout</button>
                 </div>
                 <div class="lesson-container"> <!-- Added a container for the lessons -->
                     <div v-for="lesson in cart" class="lesson">
@@ -181,7 +183,7 @@
                         <p>Location: {{ lesson.location }}</p>
                         <p>Price: ${{ lesson.price }}</p>
                         <p>Seats available: {{ lesson.seats_available }}</p>
-                        <button class="button" @click="">Remove from Cart</button>
+                        <button class="button" @click="removeFromCart(lesson)">Remove from Cart</button>
                     </div>
                 </div>
             </div>
@@ -203,12 +205,13 @@
                 showCart: false,
                 showLessons : true,
                 customerName: '', 
-                customerPhone: '' 
+                customerPhone: '' ,
+                errorMessage: ''
             },
             computed: {
                 // Computed property to return sorted lessons dynamically
                 sortedLessons() {
-                    let sorted = this.lessons.slice(); // Create a copy of the lessons array to not alter original array lessons
+                    let sorted = this.lessons
 
                     if (this.sortCriteria.field) {
                         sorted.sort((a, b) => { //compares two elements in the array at a time
@@ -232,6 +235,27 @@
                     }
                     return sorted;
                 },
+                enableCheckout(){
+                    const phonePattern = /^[0-9]{8}$/; // Adjust the pattern for your desired phone number format (e.g., 10-digit phone number)
+                    const namePattern = /^[a-zA-Z\s]{2,}$/; // Simple pattern for names (only letters and spaces, minimum 2 characters)
+
+                    // Validate phone number, name, and cart contents
+                    const isPhoneValid = phonePattern.test(this.customerPhone);
+                    const isNameValid = namePattern.test(this.customerName);
+                    const isCartNotEmpty = this.cart.length > 0;
+
+                    // Show messages if validation fails
+                    if (!isPhoneValid && this.customerPhone) {
+                        this.errorMessage = "Invalid phone number. Please enter a valid 8-digit phone number.";
+                    } else if (!isNameValid && this.customerPhone) {
+                        this.errorMessage = "Invalid name. Please enter a valid name (only letters and spaces).";
+                    } else if (!isCartNotEmpty) {
+                        this.errorMessage = "Your cart is empty. Please add items to the cart.";
+                    } else {
+                        this.errorMessage = ""; // Clear any previous error message if everything is valid
+                    }
+                    return isPhoneValid && isNameValid && isCartNotEmpty;
+                }
                      
             },
             methods: {
@@ -254,11 +278,21 @@
                 },
                 // Add lesson to cart
                 addToCart(lesson) {
-                    const clonedLesson = JSON.parse(JSON.stringify(lesson)); // Create a plain copy of the lesson object with only object attributes
-                    this.cart.push(clonedLesson);
+                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location); //find index of lesson added to cart from array lessons
+                    this.lessons[lessonIndex].seats_available--;  //decrease seats available by 1 in array lessons
+                    const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
+                    this.cart.push(clonedLesson); //add lesson object added  to cart in array cart
                     console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
-                    lesson.seats_available--
                 },
+
+                removeFromCart(lesson) {
+                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);//find index of lesson added to cart from array lessons
+                    this.lessons[lessonIndex].seats_available++;//increase seats available by 1 in array lessons
+                    const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
+                    this.cart.pop(clonedLesson); //remove lesson object added  to cart in array cart
+                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
+                },
+
                 switchToCart(){
                     this.showCart = true
                     this.showLessons = false
@@ -266,7 +300,12 @@
                 switchToLessons(){
                     this.showCart = false
                     this.showLessons = true
+                },
+
+                checkOut(){
+                    
                 }
+
             },
             mounted() {
                 this.fetchLessons(); // Call the method when the component is mounted
