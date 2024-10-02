@@ -182,7 +182,7 @@
                         <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
                         <p>Location: {{ lesson.location }}</p>
                         <p>Price: ${{ lesson.price }}</p>
-                        <p>Seats available: {{ lesson.seats_available }}</p>
+                        <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
                         <button class="button" @click="removeFromCart(lesson)">Remove from Cart</button>
                     </div>
                 </div>
@@ -278,19 +278,53 @@
                 },
                 // Add lesson to cart
                 addToCart(lesson) {
-                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location); //find index of lesson added to cart from array lessons
-                    this.lessons[lessonIndex].seats_available--;  //decrease seats available by 1 in array lessons
-                    const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
-                    this.cart.push(clonedLesson); //add lesson object added  to cart in array cart
-                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
+                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
+                    
+                    // Send PUT request to update seats in MongoDB
+                    fetch('http://localhost:3000/lessons/update-seats', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lesson_title: lesson.lesson_title,
+                            location: lesson.location,
+                            action: 'add'
+                        })
+                    })
+                    .then(data => {
+                        this.lessons[lessonIndex].seats_available = data.seats_available; // Update seats locally
+                        const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Clone the lesson
+                        this.cart.push(clonedLesson); // Add to cart
+                        console.log('Current cart:', JSON.stringify(this.cart, null, 2)); // Log the cart
+                    })
+                    .catch(error => {
+                        console.error('Error updating seats:', error);
+                    });
                 },
 
                 removeFromCart(lesson) {
-                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);//find index of lesson added to cart from array lessons
-                    this.lessons[lessonIndex].seats_available++;//increase seats available by 1 in array lessons
-                    const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
-                    this.cart.pop(clonedLesson); //remove lesson object added  to cart in array cart
-                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
+                    const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
+                    // Send PUT request to update seats in MongoDB
+                    fetch('http://localhost:3000/lessons/update-seats', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lesson_title: lesson.lesson_title,
+                            location: lesson.location,
+                            action: 'remove'
+                        })
+                    })
+                    .then(data => {
+                        this.lessons[lessonIndex].seats_available = data.seats_available; // Update seats locally
+                        this.cart.pop(); // Remove from cart
+                        console.log('Current cart:', JSON.stringify(this.cart, null, 2)); // Log the cart
+                    })
+                    .catch(error => {
+                        console.error('Error updating seats:', error);
+                    });
                 },
 
                 switchToCart(){
