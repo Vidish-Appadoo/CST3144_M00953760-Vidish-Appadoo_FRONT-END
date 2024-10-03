@@ -303,23 +303,6 @@
                 // Add lesson to cart
                 addToCart(lesson) {
                     const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
-                    
-                    // // Send PUT request to update seats in MongoDB
-                    // fetch('http://localhost:3000/lessons/update-seats', {
-                    //     method: 'PUT',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify({
-                    //         lesson_title: lesson.lesson_title,
-                    //         location: lesson.location,
-                    //         action: 'add'
-                    //     })
-                    // })
-                    // .catch(error => {
-                    //     console.error('Error updating seats:', error);
-                    // });
-
                     //update seats locally (else the update will not seem dynamic because we will have to reload to get updated information)
                     this.lessons[lessonIndex].seats_available--;  //decrease seats available by 1 in array lessons
                     const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
@@ -329,31 +312,12 @@
 
                 removeFromCart(lesson) {
                     const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
-                    
-                    // Send PUT request to update seats in MongoDB
-                    // fetch('http://localhost:3000/lessons/update-seats', {
-                    //     method: 'PUT',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     },
-                    //     body: JSON.stringify({
-                    //         lesson_title: lesson.lesson_title,
-                    //         location: lesson.location,
-                    //         action: 'remove'
-                    //     })
-                    // })
-                    // .catch(error => {
-                    //     console.error('Error updating seats:', error);
-                    // });
-
                     //update seats locally (else the update will not seem dynamic because we will have to reload to get updated information)
                     this.lessons[lessonIndex].seats_available++;//increase seats available by 1 in array lessons
                     const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
                     this.cart.pop(clonedLesson); //remove lesson object added  to cart in array cart
                     console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
                 },
-
-
                 switchToCart(){
                     this.showCart = true
                     this.showLessons = false
@@ -365,7 +329,8 @@
 
                 async checkOut() {
                     try {
-                        const response = await fetch('http://localhost:3000/lessons/update-seats', {
+                        // 1. Update seat availability in the lessons collection
+                        const updateSeatsResponse = await fetch('http://localhost:3000/lessons/update-seats', {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -374,15 +339,42 @@
                                 cart: this.cart // Send the entire cart to the backend
                             })
                         });
-                        const data = await response.json();
-                        if (data.success) {
+                        
+                        const updateSeatsData = await updateSeatsResponse.json();
+                        
+                        if (!updateSeatsData.success) {
+                            console.log('Failed to update seat availability: ' + updateSeatsData.message);
+                            return; // Exit the function if seat update fails
+                        }
+
+                        // 2. If seat availability is updated successfully, proceed with storing the order
+                        const orderResponse = await fetch('http://localhost:3000/lessons/checkout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                order: {
+                                    name: this.customerName, // Send the customer's name
+                                    phone_number: this.customerPhone, // Send the customer's phone number
+                                    lessons_taken: this.cart.map(lesson => lesson.lesson_title), // Array of lesson titles
+                                    seats_taken: this.cart.length // Number of lessons in the cart
+                                }
+                            })
+                        });
+
+                        const orderData = await orderResponse.json();
+
+                        // 3. Handle response for the order creation
+                        if (orderData.success && updateSeatsData.success) {
                             alert('Checkout successful!');
                             this.cart = []; // Empty the cart after successful checkout
                             this.fetchLessons(); // Re-fetch lessons to get updated seat availability
                             this.switchToLessons(); // Switch back to the lessons view
                         } else {
-                            alert('Checkout failed: ' + data.message);
+                            console.log('Order placement failed: ' + orderData.message);
                         }
+
                     } catch (error) {
                         console.error('Error during checkout:', error);
                         alert('Error during checkout. Please try again.');
