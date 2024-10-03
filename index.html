@@ -101,8 +101,32 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
             font-size: 1rem; 
         }
+        input[type="number"] {
+            width: 90%; 
+            padding: 10px; 
+            margin-top: 10px; 
+            margin-bottom: 20px;
+            border-radius: 5px; 
+            border: none; 
+            outline: none; 
+            background-color: #ffffff; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+            font-size: 1rem; 
+        }
+
+        /* remove arrow button in input type number*/
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
         input[type="text"]:focus {
+            border: 2px solid #e74c3c; /* Border color on focus */
+            box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); /* Shadow on focus */
+        }
+
+        input[type="number"]:focus {
             border: 2px solid #e74c3c; /* Border color on focus */
             box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); /* Shadow on focus */
         }
@@ -168,14 +192,14 @@
                     <h2>Checkout</h2>
                     <div>
                         <input type="text" v-model="customerName" placeholder="Name" />
-                        <input type="text" v-model="customerPhone" placeholder="Phone Number" />
+                        <input type="number" v-model="customerPhone" placeholder="Phone Number" />
                     </div>
                     <p>{{errorMessage}}</p>
                     <button class="button" @click="switchToLessons">
                         <i class="fas fa-times"></i>
                     </button>
-                    <button v-if="enableCheckout" class="button" @click="">Checkout</button>
-                    <button v-else disabled class="button" @click="">Checkout</button>
+                    <button v-if="enableCheckout" class="button" @click="checkOut">Check Out</button>
+                    <button v-else disabled class="button" >Check Out</button>
                 </div>
                 <div class="lesson-container"> <!-- Added a container for the lessons -->
                     <div v-for="lesson in cart" class="lesson">
@@ -211,7 +235,7 @@
             computed: {
                 // Computed property to return sorted lessons dynamically
                 sortedLessons() {
-                    let sorted = this.lessons
+                    let sorted = this.lessons.slice();  // Create a copy of the lessons array
 
                     if (this.sortCriteria.field) {
                         sorted.sort((a, b) => { //compares two elements in the array at a time
@@ -236,7 +260,7 @@
                     return sorted;
                 },
                 enableCheckout(){
-                    const phonePattern = /^[0-9]{8}$/; // Adjust the pattern for your desired phone number format (e.g., 10-digit phone number)
+                    const phonePattern = /^[0-9]{8}$/; // Adjust the pattern for your desired phone number format (e.g., 8-digit phone number)
                     const namePattern = /^[a-zA-Z\s]{2,}$/; // Simple pattern for names (only letters and spaces, minimum 2 characters)
 
                     // Validate phone number, name, and cart contents
@@ -280,21 +304,21 @@
                 addToCart(lesson) {
                     const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
                     
-                    // Send PUT request to update seats in MongoDB
-                    fetch('http://localhost:3000/lessons/update-seats', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            lesson_title: lesson.lesson_title,
-                            location: lesson.location,
-                            action: 'add'
-                        })
-                    })
-                    .catch(error => {
-                        console.error('Error updating seats:', error);
-                    });
+                    // // Send PUT request to update seats in MongoDB
+                    // fetch('http://localhost:3000/lessons/update-seats', {
+                    //     method: 'PUT',
+                    //     headers: {
+                    //         'Content-Type': 'application/json'
+                    //     },
+                    //     body: JSON.stringify({
+                    //         lesson_title: lesson.lesson_title,
+                    //         location: lesson.location,
+                    //         action: 'add'
+                    //     })
+                    // })
+                    // .catch(error => {
+                    //     console.error('Error updating seats:', error);
+                    // });
 
                     //update seats locally (else the update will not seem dynamic because we will have to reload to get updated information)
                     this.lessons[lessonIndex].seats_available--;  //decrease seats available by 1 in array lessons
@@ -307,20 +331,20 @@
                     const lessonIndex = this.lessons.findIndex(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location);
                     
                     // Send PUT request to update seats in MongoDB
-                    fetch('http://localhost:3000/lessons/update-seats', {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            lesson_title: lesson.lesson_title,
-                            location: lesson.location,
-                            action: 'remove'
-                        })
-                    })
-                    .catch(error => {
-                        console.error('Error updating seats:', error);
-                    });
+                    // fetch('http://localhost:3000/lessons/update-seats', {
+                    //     method: 'PUT',
+                    //     headers: {
+                    //         'Content-Type': 'application/json'
+                    //     },
+                    //     body: JSON.stringify({
+                    //         lesson_title: lesson.lesson_title,
+                    //         location: lesson.location,
+                    //         action: 'remove'
+                    //     })
+                    // })
+                    // .catch(error => {
+                    //     console.error('Error updating seats:', error);
+                    // });
 
                     //update seats locally (else the update will not seem dynamic because we will have to reload to get updated information)
                     this.lessons[lessonIndex].seats_available++;//increase seats available by 1 in array lessons
@@ -339,10 +363,31 @@
                     this.showLessons = true
                 },
 
-                checkOut(){
-
+                async checkOut() {
+                    try {
+                        const response = await fetch('http://localhost:3000/lessons/update-seats', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                cart: this.cart // Send the entire cart to the backend
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            alert('Checkout successful!');
+                            this.cart = []; // Empty the cart after successful checkout
+                            this.fetchLessons(); // Re-fetch lessons to get updated seat availability
+                            this.switchToLessons(); // Switch back to the lessons view
+                        } else {
+                            alert('Checkout failed: ' + data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error during checkout:', error);
+                        alert('Error during checkout. Please try again.');
+                    }
                 }
-
             },
             mounted() {
                 this.fetchLessons(); // Call the method when the component is mounted
