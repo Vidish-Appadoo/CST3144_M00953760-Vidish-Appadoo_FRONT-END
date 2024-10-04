@@ -19,6 +19,9 @@
         }
         .lessons-grid-container, .cart-container{
             display: flex;
+            flex-wrap: wrap;
+            padding-top: 20px;
+            justify-content: center; /* Centers content horizontally */
         }
         .sidebar {
             width: 250px;
@@ -131,6 +134,63 @@
             box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); /* Shadow on focus */
         }
 
+        .search-bar-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px; /* Adds space between the search bar and the sidebar/lessons grid */
+        }
+
+        .search-bar-container input[type="text"] {
+            width: 60%; /* Adjust the width as needed */
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+
+        .search-bar-container input[type="text"]:focus {
+            border: 2px solid #e74c3c; /* Border color on focus */
+            box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); /* Shadow on focus */
+        }
+
+        .filtered-lessons-list {
+            width: 90%;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filtered-lesson-item {
+            display: flex;
+            justify-content: space-between; /* Aligns children with space between */
+            align-items: center; /* Centers items vertically */
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .filtered-lesson-details {
+            flex-grow: 1; /* Allow details to take remaining space */
+            margin-right: 10px; /* Add some space between the details and the button */
+        }
+        .filtered-lesson-item:last-child {
+            border-bottom: none;
+        }
+        .filtered-lesson-item h2 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .filtered-lesson-item p {
+            margin: 0;
+            color: #7f8c8d;
+        }
+
     </style>
 
 </head>
@@ -139,6 +199,26 @@
         <div v-if="showLessons" class="lesson-list">
             <h1>Lessons List</h1>
             <div class="lessons-grid-container">
+                 <!-- Search bar container -->
+                <div class="search-bar-container">
+                    <input type="text" v-model="search" placeholder="Search Lessons">
+                </div>
+
+                <!-- Filtered lessons row (if there are filtered results) -->
+                <div v-if="filteredLessons.length > 0" class="filtered-lessons-list">
+                    <div v-for="lesson in filteredLessons" :key="lesson.id" class="filtered-lesson-item">
+                        <div class="filtered-lesson-details">
+                            <h2>{{ lesson.lesson_title }}</h2>
+                            <p>Location: {{ lesson.location }}</p>
+                            <p>Price: ${{ lesson.price }}</p>
+                            <p>Seats available: {{ lesson.seats_available }}</p>
+                        </div>
+                        <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
+                        <button v-else disabled class="button">Add To Cart</button>
+                    </div>
+                </div>
+
+
                 <!-- Sidebar for sorting -->
                 <div class="sidebar">
                     <h2>Sort by:</h2>
@@ -230,7 +310,9 @@
                 showLessons : true,
                 customerName: '', 
                 customerPhone: '' ,
-                errorMessage: ''
+                errorMessage: '',
+                filteredLessons: [],
+                search: '',
             },
             computed: {
                 // Computed property to return sorted lessons dynamically
@@ -282,6 +364,16 @@
                 }
                      
             },
+            watch: {
+                // Watch the search input and trigger search API
+                search(newSearchTerm) {
+                    if (newSearchTerm) {
+                        this.performSearch(newSearchTerm);  // Trigger the search API
+                    } else {
+                        this.filteredLessons = [];  // Reset filtered lessons when search is cleared
+                    }
+                }
+            },
             methods: {
                 // Get lessons from back-end
                 async fetchLessons() {
@@ -291,6 +383,16 @@
                         this.lessons = data; // Set the lessons data
                     } catch (error) {
                         console.error('Error fetching lessons:', error);
+                    }
+                },
+                async performSearch(query) {
+                    try {
+                        const response = await fetch(`http://localhost:3000/lessons/search?q=${query}`);
+                        const data = await response.json();
+                        this.filteredLessons = data;  // Set filtered lessons based on search results
+                        console.log(JSON.stringify(this.filteredLessons, null, 2));
+                    } catch (error) {
+                        console.error('Error during search:', error);
                     }
                 },
                 resetFilters() {
