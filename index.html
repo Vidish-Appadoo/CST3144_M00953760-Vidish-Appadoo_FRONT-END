@@ -25,10 +25,10 @@
                             <h2>{{ lesson.lesson_title }}</h2>
                             <p>Location: {{ lesson.location }}</p>
                             <p>Price: ${{ lesson.price }}</p>
-                            <p>Seats available: {{ lesson.seats_available }}</p>
+                            <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
                         </div>
-                        <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
-                        <button v-else disabled class="button">Add To Cart</button>
+                        <!-- <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
+                        <button v-else disabled class="button">Add To Cart</button> -->
                     </div>
                 </div>
 
@@ -67,7 +67,10 @@
                 <!-- Lessons grid -->
                 <div class="lesson-container">
                     <div v-for="lesson in sortedLessons" class="lesson">
-                        <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
+                        <h1>
+                            <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                            {{ lesson.lesson_title }}
+                        </h1>      
                         <p>Location: {{ lesson.location }}</p>
                         <p>Price: ${{ lesson.price }}</p>
                         <p>Seats available: {{ lesson.seats_available }}</p>
@@ -81,11 +84,12 @@
 
         <div v-if="showCart">
             <h1>Lessons Added to Cart</h1>
+             <!-- Cart grid -->
             <div class="cart-container">
                 <div class="sidebar">
                     <h2>Checkout</h2>
                     <div>
-                        <input type="text" v-model="customerName" placeholder="Name" />
+                        <input type="text" v-model.trim="customerName" placeholder="Name" />
                         <input type="number" v-model="customerPhone" placeholder="Phone Number" />
                     </div>
                     <p>{{errorMessage}}</p>
@@ -97,7 +101,10 @@
                 </div>
                 <div class="lesson-container"> <!-- Added a container for the lessons -->
                     <div v-for="lesson in cart" class="lesson">
-                        <h1><i class="fas fa-graduation-cap"></i> {{ lesson.lesson_title }}</h1>
+                        <h1>
+                            <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                            {{ lesson.lesson_title }}
+                        </h1>                        
                         <p>Location: {{ lesson.location }}</p>
                         <p>Price: ${{ lesson.price }}</p>
                         <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
@@ -174,8 +181,7 @@
                         this.errorMessage = ""; // Clear any previous error message if everything is valid
                     }
                     return isPhoneValid && isNameValid && isCartNotEmpty;
-                }
-                     
+                },  
             },
             watch: {
                 // Watch the search input and trigger search API

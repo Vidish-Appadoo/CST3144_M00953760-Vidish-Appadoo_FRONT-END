@@ -4,10 +4,16 @@ body {
     padding: 0;
     background-color: #f4f4f4;
 }
+
 h1 {
-    text-align: center;
-    color: #333;
+    font-size: 1.5rem;
+    color: #2c3e50;
+    text-align: center; /* Center text and image horizontally */
+    display: flex;
+    flex-direction: column; /* Stack the image and title vertically */
+    align-items: center; /* Center both text and image */
 }
+
 .lessons-grid-container, .cart-container{
     display: flex;
     flex-wrap: wrap;
