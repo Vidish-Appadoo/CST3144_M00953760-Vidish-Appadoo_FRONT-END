@@ -66,8 +66,10 @@ h1 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 20px;
-    padding: 20px;
     flex-grow: 1;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
 }
 .lesson {
     background-color: #fff;
@@ -186,4 +188,71 @@ input[type="number"]:focus {
 .filtered-lesson-item p {
     margin: 0;
     color: #7f8c8d;
+}
+
+.blur-background {
+    filter: blur(5px);
+}
+
+/* Modal styles */
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Darken background */
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 32px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+}
+
+.modal-header {
+    margin-bottom: 20px;
+}
+
+.modal-header h1 {
+    font-size: 2.5rem;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.lesson-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.lesson-title {
+    text-align: left;
+    font-size: 24px;
+}
+
+.lesson-price {
+    text-align: right;
+    font-weight:  bold;
+    font-size: 24px;
+}
+
+.modal-footer p {
+    margin-top: 50px;
+    font-size: 32px;
+    cursor: pointer;
+}
+
+.modal-footer button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
 }

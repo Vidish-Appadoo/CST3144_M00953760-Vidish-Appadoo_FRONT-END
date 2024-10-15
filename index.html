@@ -10,109 +10,132 @@
 </head>
 <body>
     <div id="app">
-        <div v-if="showLessons" class="lesson-list">
-            <h1>Lessons List</h1>
-            <div class="lessons-grid-container">
-                 <!-- Search bar container -->
-                <div class="search-bar-container">
-                    <input type="text" v-model="search" placeholder="Search Lessons">
-                </div>
+        <div :class="{ 'blur-background': showCheckoutModal }">
+            <div v-if="showLessons" class="lesson-list">
+                <h1>Lessons List</h1>
+                <div class="lessons-grid-container">
+                    <!-- Search bar container -->
+                    <div class="search-bar-container">
+                        <input type="text" v-model="search" placeholder="Search Lessons">
+                    </div>
 
-                <!-- Filtered lessons row (if there are filtered results) -->
-                <div v-if="filteredLessons.length > 0" class="filtered-lessons-list">
-                    <div v-for="lesson in filteredLessons" :key="lesson.id" class="filtered-lesson-item">
-                        <div class="filtered-lesson-details">
-                            <h2>{{ lesson.lesson_title }}</h2>
+                    <!-- Filtered lessons row (if there are filtered results) -->
+                    <div v-if="filteredLessons.length > 0" class="filtered-lessons-list">
+                        <div v-for="lesson in filteredLessons" :key="lesson.id" class="filtered-lesson-item">
+                            <div class="filtered-lesson-details">
+                                <h2>{{ lesson.lesson_title }}</h2>
+                                <p>Location: {{ lesson.location }}</p>
+                                <p>Price: ${{ lesson.price }}</p>
+                                <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
+                            </div>
+                            <!-- <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
+                            <button v-else disabled class="button">Add To Cart</button> -->
+                        </div>
+                    </div>
+
+
+                    <!-- Sidebar for sorting -->
+                    <div class="sidebar">
+                        <h2>Sort by:</h2>
+                        <!-- Field selection for sorting -->
+                        <div>
+                            <input type="radio" v-model="sortCriteria.field" value="subject_name">
+                            <label for="sort">Subject</label> <br>
+
+                            <input type="radio" v-model="sortCriteria.field" value="location">
+                            <label for="sort">Location</label> <br>
+
+                            <input type="radio" v-model="sortCriteria.field" value="price">
+                            <label for="sort">Price</label> <br>
+
+                            <input type="radio" v-model="sortCriteria.field" value="seats_available">
+                            <label for="sort">Seats Available</label> <br>
+                        </div>
+                        <!-- Order selection for sorting (asc/desc)-->
+                        <select v-model="sortCriteria.order" >
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+
+                        <button class="button" @click="resetFilters">Reset Filters</button>
+
+                        <!-- Disable button if no nothing in cart -->
+                        <button v-if="cart.length > 0" class="button" @click="switchToCart"><i class="fas fa-shopping-cart"></i> [{{cart.length}}]</button>
+                        <button v-else class="button" disabled><i class="fas fa-shopping-cart"></i></button>
+                        
+                    </div>
+
+                    <!-- Lessons grid -->
+                    <div class="lesson-container">
+                        <div v-for="lesson in sortedLessons" class="lesson">
+                            <h1>
+                                <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                                {{ lesson.lesson_title }}
+                            </h1>      
+                            <p>Location: {{ lesson.location }}</p>
+                            <p>Price: ${{ lesson.price }}</p>
+                            <p>Seats available: {{ lesson.seats_available }}</p>
+                            <!-- Disable button if no seats available -->
+                            <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
+                            <button v-else disabled class="button">Add To Cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="showCart">
+                <h1>Lessons Added to Cart</h1>
+                <!-- Cart grid -->
+                <div class="cart-container">
+                    <div class="sidebar">
+                        <h2>User Information</h2>
+                        <div>
+                            <input type="text" v-model.trim="firstName" placeholder="First Name" />
+                            <input type="text" v-model.trim="lastName" placeholder="Last Name" />
+                            <input type="text" v-model.trim="email" placeholder="Email Address" />
+                            <input type="number" v-model="phone" placeholder="Phone Number" />
+                        </div>
+                        <p>{{errorMessage}}</p>
+                        <button class="button" @click="switchToLessons">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button v-if="enableCheckout" class="button" @click="openCheckoutModal">Place Order</button>
+                        <button v-else disabled class="button" >Place Order</button>
+                    </div>
+                    <div class="lesson-container"> <!-- Added a container for the lessons -->
+                        <div v-for="lesson in cart" class="lesson">
+                            <h1>
+                                <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                                {{ lesson.lesson_title }}
+                            </h1>                        
                             <p>Location: {{ lesson.location }}</p>
                             <p>Price: ${{ lesson.price }}</p>
                             <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
+                            <button class="button" @click="removeFromCart(lesson)">Remove from Cart</button>
                         </div>
-                        <!-- <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
-                        <button v-else disabled class="button">Add To Cart</button> -->
-                    </div>
-                </div>
-
-
-                <!-- Sidebar for sorting -->
-                <div class="sidebar">
-                    <h2>Sort by:</h2>
-                    <!-- Field selection for sorting -->
-                    <div>
-                        <input type="radio" v-model="sortCriteria.field" value="subject_name">
-                        <label for="sort">Subject</label> <br>
-
-                        <input type="radio" v-model="sortCriteria.field" value="location">
-                        <label for="sort">Location</label> <br>
-
-                        <input type="radio" v-model="sortCriteria.field" value="price">
-                        <label for="sort">Price</label> <br>
-
-                        <input type="radio" v-model="sortCriteria.field" value="seats_available">
-                        <label for="sort">Seats Available</label> <br>
-                    </div>
-                    <!-- Order selection for sorting (asc/desc)-->
-                    <select v-model="sortCriteria.order" >
-                        <option value="asc">Ascending</option>
-                        <option value="desc">Descending</option>
-                    </select>
-
-                    <button class="button" @click="resetFilters">Reset Filters</button>
-
-                    <!-- Disable button if no nothing in cart -->
-                    <button v-if="cart.length > 0" class="button" @click="switchToCart"><i class="fas fa-shopping-cart"></i> [{{cart.length}}]</button>
-                    <button v-else class="button" disabled><i class="fas fa-shopping-cart"></i></button>
-                    
-                </div>
-
-                <!-- Lessons grid -->
-                <div class="lesson-container">
-                    <div v-for="lesson in sortedLessons" class="lesson">
-                        <h1>
-                            <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
-                            {{ lesson.lesson_title }}
-                        </h1>      
-                        <p>Location: {{ lesson.location }}</p>
-                        <p>Price: ${{ lesson.price }}</p>
-                        <p>Seats available: {{ lesson.seats_available }}</p>
-                        <!-- Disable button if no seats available -->
-                        <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
-                        <button v-else disabled class="button">Add To Cart</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div v-if="showCart">
-            <h1>Lessons Added to Cart</h1>
-             <!-- Cart grid -->
-            <div class="cart-container">
-                <div class="sidebar">
-                    <h2>Checkout</h2>
-                    <div>
-                        <input type="text" v-model.trim="customerName" placeholder="Name" />
-                        <input type="number" v-model="customerPhone" placeholder="Phone Number" />
-                    </div>
-                    <p>{{errorMessage}}</p>
-                    <button class="button" @click="switchToLessons">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button v-if="enableCheckout" class="button" @click="checkOut">Check Out</button>
-                    <button v-else disabled class="button" >Check Out</button>
+        <!-- Checkout Modal -->
+        <div v-if="showCheckoutModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1>Order Summary</h1>
                 </div>
-                <div class="lesson-container"> <!-- Added a container for the lessons -->
-                    <div v-for="lesson in cart" class="lesson">
-                        <h1>
-                            <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
-                            {{ lesson.lesson_title }}
-                        </h1>                        
-                        <p>Location: {{ lesson.location }}</p>
-                        <p>Price: ${{ lesson.price }}</p>
-                        <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
-                        <button class="button" @click="removeFromCart(lesson)">Remove from Cart</button>
-                    </div>
+                <div v-for="lesson in cart" class="lesson-summary">
+                    <span class="lesson-title">{{ lesson.lesson_title }}</span>
+                    <span class="lesson-price">${{ lesson.price }}</span>
+                </div>
+                <div class="modal-footer">
+                    <p><strong>Total: ${{ cartTotal }}</strong></p>
+                    <button class="button" @click="confirmCheckout">Confirm Checkout</button>
+                    <button class="button" @click="closeCheckoutModal">Cancel</button>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -128,11 +151,14 @@
                 cart: [],
                 showCart: false,
                 showLessons : true,
-                customerName: '', 
-                customerPhone: '' ,
+                firstName: '', 
+                lastName: '',
+                email: '',
+                phone: '' ,
                 errorMessage: '',
                 filteredLessons: [],
                 search: '',
+                showCheckoutModal: false,
             },
             computed: {
                 // Computed property to return sorted lessons dynamically
@@ -161,27 +187,40 @@
                     }
                     return sorted;
                 },
-                enableCheckout(){
-                    const phonePattern = /^[0-9]{8}$/; // Adjust the pattern for your desired phone number format (e.g., 8-digit phone number)
-                    const namePattern = /^[a-zA-Z\s]{2,}$/; // Simple pattern for names (only letters and spaces, minimum 2 characters)
+                enableCheckout() {
+                    // Validation patterns
+                    const phonePattern = /^[0-9]{8}$/; // Adjust pattern to 8-digit phone number
+                    const namePattern = /^[a-zA-Z\s]{2,}$/; // Simple pattern for names (letters and spaces, min 2 characters)
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email pattern
 
-                    // Validate phone number, name, and cart contents
-                    const isPhoneValid = phonePattern.test(this.customerPhone);
-                    const isNameValid = namePattern.test(this.customerName);
+                    // Validate each field
+                    const isFirstNameValid = namePattern.test(this.firstName);
+                    const isLastNameValid = namePattern.test(this.lastName);
+                    const isEmailValid = emailPattern.test(this.email);
+                    const isPhoneValid = phonePattern.test(this.phone);
                     const isCartNotEmpty = this.cart.length > 0;
 
-                    // Show messages if validation fails
-                    if (!isPhoneValid && this.customerPhone) {
+                    // Error handling for each invalid case
+                    if (!isFirstNameValid && this.firstName) {
+                        this.errorMessage = "Invalid first name. Please enter a valid name (only letters and spaces).";
+                    } else if (!isLastNameValid && this.lastName) {
+                        this.errorMessage = "Invalid last name. Please enter a valid name (only letters and spaces).";
+                    } else if (!isEmailValid && this.email) {
+                        this.errorMessage = "Invalid email. Please enter a valid email address.";
+                    } else if (!isPhoneValid && this.phone) {
                         this.errorMessage = "Invalid phone number. Please enter a valid 8-digit phone number.";
-                    } else if (!isNameValid && this.customerPhone) {
-                        this.errorMessage = "Invalid name. Please enter a valid name (only letters and spaces).";
                     } else if (!isCartNotEmpty) {
                         this.errorMessage = "Your cart is empty. Please add items to the cart.";
                     } else {
                         this.errorMessage = ""; // Clear any previous error message if everything is valid
                     }
-                    return isPhoneValid && isNameValid && isCartNotEmpty;
-                },  
+
+                    // Return true if all fields are valid and cart is not empty
+                    return isFirstNameValid && isLastNameValid && isEmailValid && isPhoneValid && isCartNotEmpty;
+                },
+                cartTotal() {
+                    return this.cart.reduce((total, lesson) => total + lesson.price, 0); // Calculate the total price of cart
+                }
             },
             watch: {
                 // Watch the search input and trigger search API
@@ -247,8 +286,14 @@
                     this.showCart = false
                     this.showLessons = true
                 },
+                openCheckoutModal() {
+                    this.showCheckoutModal = true; // Show the modal
+                },
+                closeCheckoutModal() {
+                    this.showCheckoutModal = false; // Hide the modal
+                },
 
-                async checkOut() {
+                async confirmCheckout() {
                     try {
                         // 1. Update seat availability in the lessons collection
                         const updateSeatsResponse = await fetch('http://localhost:3000/lessons/update-seats', {
@@ -276,8 +321,9 @@
                             },
                             body: JSON.stringify({
                                 order: {
-                                    name: this.customerName, // Send the customer's name
-                                    phone_number: this.customerPhone, // Send the customer's phone number
+                                    name: `${this.firstName} ${this.lastName}`, // Concatenate firstName and lastName
+                                    phone_number: this.phone, // Send the customer's phone number
+                                    email: this.email, // Send the customer's email
                                     lessons_taken: this.cart.map(lesson => lesson.lesson_title), // Array of lesson titles
                                     seats_taken: this.cart.length // Number of lessons in the cart
                                 }
@@ -288,10 +334,11 @@
 
                         // 3. Handle response for the order creation
                         if (orderData.success && updateSeatsData.success) {
-                            alert('Checkout successful!');
+                            console.log('Checkout successful!');
                             this.cart = []; // Empty the cart after successful checkout
                             this.fetchLessons(); // Re-fetch lessons to get updated seat availability
                             this.switchToLessons(); // Switch back to the lessons view
+                            this.closeCheckoutModal(); // Close the modal
                         } else {
                             console.log('Order placement failed: ' + orderData.message);
                         }
@@ -300,7 +347,7 @@
                         console.error('Error during checkout:', error);
                         alert('Error during checkout. Please try again.');
                     }
-                }
+                },
             },
             mounted() {
                 this.fetchLessons(); // Call the method when the component is mounted
