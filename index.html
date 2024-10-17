@@ -26,10 +26,24 @@
                                 <h2>{{ lesson.lesson_title }}</h2>
                                 <p>Location: {{ lesson.location }}</p>
                                 <p>Price: ${{ lesson.price }}</p>
-                                <!-- <p>Seats available: {{ lesson.seats_available }}</p> -->
+                                <!-- Display seats available from the lessons array, not from filteredLessons.
+                                Use `find()` to search the `lessons` array for the matching lesson by comparing
+                                `lesson_title` and `location` from filteredLessons with lessons array. 
+                                If a match is found, display `seats_available`, otherwise default to 0. -->
+                                <p>Seats available: {{
+                                    lessons.find(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location)?.seats_available || 0
+                                }}</p>
                             </div>
-                            <!-- <button v-if="lesson.seats_available > 0"class="button" @click="addToCart(lesson)">Add To Cart</button>
-                            <button v-else disabled class="button">Add To Cart</button> -->
+                            <!-- Only enable the "Add to Cart" button if the corresponding lesson in lessons array 
+                            has seats available greater than 0. Again, we use `find()` to locate the matching
+                            lesson and check its `seats_available`. -->
+                            <button 
+                            v-if="lessons.find(l => l.lesson_title === lesson.lesson_title && l.location === lesson.location)?.seats_available > 0" 
+                            class="button" 
+                            @click="addToCart(lesson)">
+                            Add To Cart
+                            </button>
+                           <button v-else disabled class="button">Add To Cart</button>
                         </div>
                     </div>
 
