@@ -162,7 +162,7 @@
                     field: '', // Field to sort by (e.g., subject, location, etc.)
                     order: 'asc' // Order to sort by (ascending or descending)
                 },
-                cart: [],
+                cart: [],// Array to hold data in cart
                 showCart: false,
                 showLessons : true,
                 firstName: '', 
@@ -170,7 +170,7 @@
                 email: '',
                 phone: '' ,
                 errorMessage: '',
-                filteredLessons: [],
+                filteredLessons: [],// Array to hold data for searched items
                 search: '',
                 showCheckoutModal: false,
             },
@@ -247,6 +247,7 @@
                         console.error('Error fetching lessons:', error);
                     }
                 },
+                // Get lessons based on search and store in filteredLessons
                 async performSearch() {
                     try {
                         if (this.search != ""){
@@ -285,11 +286,11 @@
                     const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
                     this.cart.pop(clonedLesson); //remove lesson object added  to cart in array cart
                 },
-                switchToCart(){
+                switchToCart(){ // Show the cart
                     this.showCart = true
                     this.showLessons = false
                 },
-                switchToLessons(){
+                switchToLessons(){ // Show the lessons
                     this.showCart = false
                     this.showLessons = true
                 },
