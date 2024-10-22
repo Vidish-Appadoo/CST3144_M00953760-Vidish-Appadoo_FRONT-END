@@ -16,7 +16,7 @@
                 <div class="lessons-grid-container">
                     <!-- Search bar container -->
                     <div class="search-bar-container">
-                        <input type="text" v-model="search" placeholder="Search Lessons">
+                        <input type="text" v-model="search" @input="performSearch" placeholder="Search Lessons">
                     </div>
 
                     <!-- Filtered lessons row (if there are filtered results) -->
@@ -236,16 +236,6 @@
                     return this.cart.reduce((total, lesson) => total + lesson.price, 0); // Calculate the total price of cart
                 }
             },
-            watch: {
-                // Watch the search input and trigger search API
-                search(newSearchTerm) {
-                    if (newSearchTerm) {
-                        this.performSearch(newSearchTerm);  // Trigger the search API
-                    } else {
-                        this.filteredLessons = [];  // Reset filtered lessons when search is cleared
-                    }
-                }
-            },
             methods: {
                 // Get lessons from back-end
                 async fetchLessons() {
@@ -257,12 +247,17 @@
                         console.error('Error fetching lessons:', error);
                     }
                 },
-                async performSearch(query) {
+                async performSearch() {
                     try {
-                        const response = await fetch(`http://localhost:3000/lessons/search?q=${query}`);
-                        const data = await response.json();
-                        this.filteredLessons = data;  // Set filtered lessons based on search results
-                        console.log(JSON.stringify(this.filteredLessons, null, 2));
+                        if (this.search != ""){
+                            const response = await fetch(`http://localhost:3000/lessons/search?q=${this.search}`);
+                            const data = await response.json();
+                            this.filteredLessons = data;  // Set filtered lessons based on search results
+                            console.log(JSON.stringify(this.filteredLessons, null, 2));
+                        }else{
+                            this.filteredLessons = []; 
+                        }
+                        
                     } catch (error) {
                         console.error('Error during search:', error);
                     }
@@ -281,7 +276,6 @@
                     this.lessons[lessonIndex].seats_available--;  //decrease seats available by 1 in array lessons
                     const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
                     this.cart.push(clonedLesson); //add lesson object added  to cart in array cart
-                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
                 },
 
                 removeFromCart(lesson) {
@@ -290,7 +284,6 @@
                     this.lessons[lessonIndex].seats_available++;//increase seats available by 1 in array lessons
                     const clonedLesson = JSON.parse(JSON.stringify(this.lessons[lessonIndex])); // Create a plain copy of the lesson object with only object attributes
                     this.cart.pop(clonedLesson); //remove lesson object added  to cart in array cart
-                    console.log('Current cart:', JSON.stringify(this.cart, null, 2));// Log the entire cart as a JSON string
                 },
                 switchToCart(){
                     this.showCart = true
