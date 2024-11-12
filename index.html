@@ -254,7 +254,6 @@
                             const response = await fetch(`https://cst3144-m00953760-vidish-appadoo-back.onrender.com/lessons/search?q=${this.search}`);
                             const data = await response.json();
                             this.filteredLessons = data;  // Set filtered lessons based on search results
-                            console.log(JSON.stringify(this.filteredLessons, null, 2));
                         }else{
                             this.filteredLessons = []; 
                         }
