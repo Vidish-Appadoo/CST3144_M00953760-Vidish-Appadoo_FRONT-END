@@ -83,7 +83,7 @@
                     <div class="lesson-container">
                         <div v-for="lesson in sortedLessons" class="lesson">
                             <h1>
-                                <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                                <img :src="'https://cst3144-m00953760-vidish-appadoo-back.onrender.com/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
                                 {{ lesson.lesson_title }}
                             </h1>      
                             <p>Location: {{ lesson.location }}</p>
@@ -119,7 +119,7 @@
                     <div class="lesson-container"> <!-- Added a container for the lessons -->
                         <div v-for="lesson in cart" class="lesson">
                             <h1>
-                                <img :src="'http://localhost:3000/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
+                                <img :src="'https://cst3144-m00953760-vidish-appadoo-back.onrender.com/assets/image.png'" alt="Icon" width="40" height="30" /> <br>
                                 {{ lesson.lesson_title }}
                             </h1>                        
                             <p>Location: {{ lesson.location }}</p>
@@ -240,7 +240,7 @@
                 // Get lessons from back-end
                 async fetchLessons() {
                     try {
-                        const response = await fetch('http://localhost:3000/lessons');
+                        const response = await fetch('https://cst3144-m00953760-vidish-appadoo-back.onrender.com/lessons');
                         const data = await response.json();
                         this.lessons = data; // Set the lessons data
                     } catch (error) {
@@ -251,7 +251,7 @@
                 async performSearch() {
                     try {
                         if (this.search != ""){
-                            const response = await fetch(`http://localhost:3000/lessons/search?q=${this.search}`);
+                            const response = await fetch(`https://cst3144-m00953760-vidish-appadoo-back.onrender.com/lessons/search?q=${this.search}`);
                             const data = await response.json();
                             this.filteredLessons = data;  // Set filtered lessons based on search results
                             console.log(JSON.stringify(this.filteredLessons, null, 2));
@@ -304,7 +304,7 @@
                 async confirmCheckout() {
                     try {
                         // 1. Update seat availability in the lessons collection
-                        const updateSeatsResponse = await fetch('http://localhost:3000/lessons/update-seats', {
+                        const updateSeatsResponse = await fetch('https://cst3144-m00953760-vidish-appadoo-back.onrender.com/lessons/update-seats', {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -322,7 +322,7 @@
                         }
 
                         // 2. If seat availability is updated successfully, proceed with storing the order
-                        const orderResponse = await fetch('http://localhost:3000/lessons/checkout', {
+                        const orderResponse = await fetch('https://cst3144-m00953760-vidish-appadoo-back.onrender.com/lessons/checkout', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
